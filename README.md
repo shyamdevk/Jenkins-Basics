@@ -1781,4 +1781,315 @@ pipeline {
 
 ---
 
+# 🚀 Jenkins Learning Notes – Phase 6 & Phase 7
+
+> These phases move you from **CI** to **real DevOps pipelines**  
+> Jenkins + Docker + Kubernetes = 💯 Job-ready skillset
+
+---
+
+# 📌 PHASE 6: JENKINS + DOCKER
+
+![Jenkins](https://github.com/shyamdevk/Jenkins-Basics/blob/images/jendock.webp)
+
+This phase teaches **container-based CI/CD**, which is **VERY IMPORTANT**.
+
+---
+
+## 🔹 Why Jenkins + Docker?
+
+Problems without Docker:
+- Works on my machine issue
+- Different environments
+- Dependency conflicts
+
+Docker solves this by:
+✔ Packaging app + dependencies  
+✔ Same environment everywhere  
+✔ Faster builds  
+
+---
+
+## 🔹 Jenkins + Docker Workflow
+
+```
+
+GitHub → Jenkins → Build Docker Image → Push to Registry
+
+````
+
+---
+
+## 🔹 Requirements (Before Lab)
+
+Make sure:
+- Jenkins is installed
+- Docker is installed on Jenkins server
+- Jenkins user has Docker permission
+
+Command:
+```bash
+sudo usermod -aG docker jenkins
+sudo systemctl restart jenkins
+````
+
+---
+
+## 🔬 LAB 10: Jenkins Build Docker Image (BASIC – MUST DO)
+
+### 🎯 Objective
+
+Build a Docker image using Jenkins Pipeline.
+
+---
+
+### 🪜 Step-by-Step Instructions
+
+#### Step 1: Create Sample App
+
+Create a file `app.sh`:
+
+```bash
+echo "Hello from Docker via Jenkins"
+```
+
+---
+
+#### Step 2: Create Dockerfile
+
+```Dockerfile
+FROM alpine
+COPY app.sh /app.sh
+CMD ["sh", "/app.sh"]
+```
+
+---
+
+#### Step 3: Create Jenkinsfile
+
+```groovy
+pipeline {
+  agent any
+
+  stages {
+    stage('Build Docker Image') {
+      steps {
+        sh 'docker build -t jenkins-docker-demo .'
+      }
+    }
+
+    stage('Run Container') {
+      steps {
+        sh 'docker run jenkins-docker-demo'
+      }
+    }
+  }
+}
+```
+
+---
+
+### ✅ Expected Output
+
+* Docker image built
+* Container runs successfully
+* Output visible in Jenkins console
+
+---
+
+## 🔬 LAB 11: Jenkins + Docker Hub (REAL WORLD)
+
+![Jenkins](https://github.com/shyamdevk/Jenkins-Basics/blob/images/jenhub.gif)
+
+### 🎯 Objective
+
+Push Docker image to Docker Hub.
+
+---
+
+### 🪜 Steps
+
+#### Step 1: Add Docker Hub Credentials
+
+* Jenkins → Manage Jenkins → Credentials
+* Add Username & Password
+
+---
+
+#### Step 2: Update Jenkinsfile
+
+```groovy
+pipeline {
+  agent any
+
+  stages {
+    stage('Build Image') {
+      steps {
+        sh 'docker build -t <docker-username>/demo-app .'
+      }
+    }
+
+    stage('Login to Docker Hub') {
+      steps {
+        withCredentials([usernamePassword(
+          credentialsId: 'dockerhub',
+          usernameVariable: 'USER',
+          passwordVariable: 'PASS'
+        )]) {
+          sh 'docker login -u $USER -p $PASS'
+        }
+      }
+    }
+
+    stage('Push Image') {
+      steps {
+        sh 'docker push <docker-username>/demo-app'
+      }
+    }
+  }
+}
+```
+
+---
+
+### ✅ Skills You Gain
+
+✔ Docker build automation
+✔ Secure credential usage
+✔ Real CI/CD pipeline
+
+---
+
+# 📌 PHASE 7: JENKINS + KUBERNETES (INTRO LEVEL)
+
+This phase introduces **cloud-native CI/CD**.
+
+📌 **Foundation level is enough for freshers**
+
+---
+
+## 🔹 Why Jenkins + Kubernetes?
+
+Kubernetes allows:
+
+* Dynamic build agents
+* Auto scaling
+* Faster & isolated builds
+
+📌 Jenkins creates **pods on demand**.
+
+---
+
+## 🔹 Jenkins + Kubernetes Architecture (Simple)
+
+```
+Jenkins → Kubernetes API → Pod Created → Job Runs → Pod Deleted
+```
+
+---
+
+## 🔹 Kubernetes as Jenkins Agent
+
+* Jenkins does NOT run jobs itself
+* It requests Kubernetes to create pods
+* Pods act as agents
+
+---
+
+## 🔬 LAB 12: Jenkins with Kubernetes Agent (BASIC)
+
+### 🎯 Objective
+
+Run Jenkins pipeline inside Kubernetes pod.
+
+---
+
+### 🪜 Requirements
+
+* Kubernetes cluster (Minikube is enough)
+* Jenkins Kubernetes plugin installed
+
+---
+
+### 🪜 Step-by-Step Instructions
+
+#### Step 1: Install Kubernetes Plugin
+
+* Manage Jenkins → Plugins
+* Install **Kubernetes plugin**
+
+---
+
+#### Step 2: Configure Kubernetes Cloud
+
+* Manage Jenkins → Clouds → Kubernetes
+* Add:
+
+  * Kubernetes URL
+  * Namespace
+  * Jenkins URL
+
+---
+
+#### Step 3: Sample Kubernetes Pipeline
+
+```groovy
+pipeline {
+  agent {
+    kubernetes {
+      yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: alpine
+    image: alpine
+    command:
+    - cat
+    tty: true
+"""
+    }
+  }
+
+  stages {
+    stage('Run in Pod') {
+      steps {
+        container('alpine') {
+          sh 'echo Hello from Kubernetes Agent'
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+### ✅ Expected Output
+
+* Kubernetes pod created
+* Command executed inside pod
+* Pod destroyed after job
+
+---
+
+## 🎯 Minimum Labs to Complete
+
+| Phase      | Lab         | Mandatory |
+| ---------- | ----------- | --------- |
+| Docker     | Build Image | ✅         |
+| Docker     | Push Image  | ✅         |
+| Kubernetes | Pod Agent   | ✅         |
+
+---
+
+## 🧠 Interview Quick Notes (VERY IMPORTANT)
+
+* Docker ensures consistent environments
+* Jenkins automates Docker builds
+* Kubernetes provides dynamic agents
+* Pods are created per job
+* Pipelines are preferred over freestyle
+
+
 
